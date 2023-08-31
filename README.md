@@ -1,2 +1,1 @@
-# alx-backend-user-data
-alx data repository
+alx data repository for personal data projects
