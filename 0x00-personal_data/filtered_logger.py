@@ -35,10 +35,10 @@ def filter_datum(fields: List[str], redaction: str,
     """
     filter and replace value base on pattern defined
     """
-    pattern = r'(?<={value}=).+?{sep}'
-    for search_word in fields:
-        message = re.sub(pattern.format(value=search_word,
-                         sep=seperator), redaction, message)
+    for s_w in fields:
+        message = re.sub(
+            r'(?<={v}=).+?{s}'.format(v=s_w, s=seperator),
+            redaction, message)
     return message
 
 
