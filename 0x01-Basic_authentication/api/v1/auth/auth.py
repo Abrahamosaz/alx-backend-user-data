@@ -1,45 +1,58 @@
 #!/usr/bin/env python3
 """
-Module to handle the authentication system
+Definition of class Auth
 """
 from flask import request
-from typing import List, TypeVar
+from typing import (
+    List,
+    TypeVar
+)
 
 
 class Auth:
-
-    def require_auth(self, path: str, excluded_path: List[str]) -> bool:
+    """
+    Manages the API authentication
+    """
+    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
         """
-        check if the request.path url need Authentication by using
-        the excluded_path variable
+        Determines whether a given path requires authentication or not
+        Args:
+            - path(str): Url path to be checked
+            - excluded_paths(List of str): List of paths that do not require
+              authentication
+        Return:
+            - True if path is not in excluded_paths, else False
         """
-        try:
-            assert path is not None
-            assert excluded_path is not None or excluded_path != ""
-        except AssertionError:
+        if path is None:
             return True
-
-        path_str = ''
-        if path != '/':
-            path_str = path + '/'
-        if path in excluded_path or path_str in excluded_path:
+        elif excluded_paths is None or excluded_paths == []:
+            return True
+        elif path in excluded_paths:
             return False
+        else:
+            for i in excluded_paths:
+                if i.startswith(path):
+                    return False
+                if path.startswith(i):
+                    return False
+                if i[-1] == "*":
+                    if path.startswith(i[:-1]):
+                        return False
         return True
 
     def authorization_header(self, request=None) -> str:
         """
-        return the  Authorization header value
+        Returns the authorization header from a request object
         """
-        try:
-            assert request is not None
-            assert request.headers.get("Authorization")
-        except AssertionError:
+        if request is None:
             return None
-
-        return request.headers.get("Authorization")
+        header = request.headers.get('Authorization')
+        if header is None:
+            return None
+        return header
 
     def current_user(self, request=None) -> TypeVar('User'):
         """
-        return the current user from the request object
+        Returns a User instance from information from a request object
         """
         return None

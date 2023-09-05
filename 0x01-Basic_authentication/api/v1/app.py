@@ -13,31 +13,33 @@ app = Flask(__name__)
 app.register_blueprint(app_views)
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 auth = None
-if getenv("AUTH_TYPE") == "auth":
+AUTH_TYPE = os.getenv("AUTH_TYPE")
+if AUTH_TYPE == "auth":
     from api.v1.auth.auth import Auth
     auth = Auth()
-elif getenv("AUTH_TYPE") == "basic_auth":
+elif AUTH_TYPE == "basic_auth":
     from api.v1.auth.basic_auth import BasicAuth
     auth = BasicAuth()
 
 
-def handle_requests():
+@app.before_request
+def bef_req():
+    """
+    Filter each request before it's handled by the proper route
+    """
     if auth is None:
         pass
     else:
-        excluded_path = [
+        excluded = [
             '/api/v1/status/',
             '/api/v1/unauthorized/',
             '/api/v1/forbidden/'
         ]
-        if auth.require_auth(request.path, excluded_path):
+        if auth.require_auth(request.path, excluded):
             if auth.authorization_header(request) is None:
-                abort(401)
+                abort(401, description="Unauthorized")
             if auth.current_user(request) is None:
-                abort(403)
-
-
-app.before_request(handle_requests)
+                abort(403, description="Forbidden")
 
 
 @app.errorhandler(404)
@@ -48,17 +50,15 @@ def not_found(error) -> str:
 
 
 @app.errorhandler(401)
-def unathorized(error) -> str:
-    """
-    Unauthorized access 401
+def unauthorized(error) -> str:
+    """ Request unauthorized handler
     """
     return jsonify({"error": "Unauthorized"}), 401
 
 
 @app.errorhandler(403)
 def forbidden(error) -> str:
-    """"
-    Forbidden access 403
+    """ Request unauthorized handler
     """
     return jsonify({"error": "Forbidden"}), 403
 
